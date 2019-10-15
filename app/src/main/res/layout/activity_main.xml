@@ -19,7 +19,7 @@
             app:startAngle="135"
             app:borderWidth="10dp"
             app:borderColor="#e0e0e0"
-            app:innerCircleScale="0.25"
+            app:innerCircleScale="0.2"
             app:innerCircleColor="#ffffff"
             app:innerCircleBorderColor="#e0e0e0"/>
 

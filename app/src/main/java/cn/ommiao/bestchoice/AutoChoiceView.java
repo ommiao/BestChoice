@@ -222,6 +222,7 @@ public class AutoChoiceView extends View {
         pointerRightX = (float) (viewCenter.x + Math.sin(pointerRightAngleH) * pointerSideLength);
         pointerRightY = (float) (viewCenter.y + Math.cos(pointerRightAngleH) * pointerSideLength);
 
+        pointerPath.reset();
         pointerPath.moveTo(viewCenter.x, viewCenter.y);
         pointerPath.lineTo(pointerLeftX, pointerLeftY);
         pointerPath.lineTo(pointerEndX, pointerEndY);
@@ -231,7 +232,7 @@ public class AutoChoiceView extends View {
         mPaint.setColor(pointerColor);
         canvas.drawPath(pointerPath, mPaint);
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth((float) (radius * pointerLengthScale * 0.03));
+        mPaint.setStrokeWidth((float) (radius * pointerLengthScale * 0.02));
         mPaint.setStrokeJoin(Paint.Join.MITER);
         mPaint.setColor(pointerBorderColor);
         canvas.drawPath(pointerPath, mPaint);
