@@ -70,10 +70,22 @@ public class AutoChoiceView extends View {
 
     private void calculateAngles() {
         int size = choices.size();
-        Choice.PER_ANGLE = 360F / size;
-        for (int i = 0; i < choices.size(); i++) {
-            choices.get(i).setStartAngle(Choice.PER_ANGLE * i);
+        Choice.PER_ANGLE = 360F / getAllWeight();
+        float startAngle = 0F;
+        for (int i = 0; i < size; i++) {
+            if(i > 0){
+                startAngle += choices.get(i - 1).getWeight() * Choice.PER_ANGLE;
+            }
+            choices.get(i).setStartAngle(startAngle);
         }
+    }
+
+    private float getAllWeight(){
+        int weight = 0;
+        for (Choice choice : choices) {
+            weight += choice.getWeight();
+        }
+        return weight;
     }
 
     private void refreshChoices(){
@@ -114,14 +126,16 @@ public class AutoChoiceView extends View {
         //choices
         if(choicesCache.size() > 0 && choiceSweepAngle > 0){
             int drawCount = getDrawCount(choiceSweepAngle);
-            float left = choiceSweepAngle - perChoiceAngle * (drawCount - 1);
+            float left = choiceSweepAngle - choicesCache.get(drawCount - 1).getStartAngle();
             mPaint.setColor(Color.parseColor(choicesCache.get(drawCount - 1).getColor()));
             canvas.drawArc(rect, 270, left, true, mPaint);
-            int j = 0;
             for(int i = drawCount - 2; i >= 0; i--){
                 mPaint.setColor(Color.parseColor(choicesCache.get(i).getColor()));
-                canvas.drawArc(rect, 270 + left + j * perChoiceAngle, perChoiceAngle, true, mPaint);
-                j++;
+                float anglePrevious = 0F;
+                for(int j = drawCount - 2; j > i; j--){
+                    anglePrevious += choicesCache.get(j).getWeight() * perChoiceAngle;
+                }
+                canvas.drawArc(rect, 270 + left + anglePrevious, perChoiceAngle * choicesCache.get(i).getWeight(), true, mPaint);
             }
         }
 
@@ -132,27 +146,25 @@ public class AutoChoiceView extends View {
     }
 
     private int getDrawCount(float sweepAngle){
-        for (int i = 0; i < choicesCache.size(); i++) {
-            if(choicesCache.get(i).getStartAngle() > sweepAngle){
-                return i;
+        int size = choicesCache.size();
+        for (int i = size - 1; i >= 0 ; i--) {
+            if(sweepAngle >= choicesCache.get(i).getStartAngle()){
+                return i + 1;
             }
         }
-        return choicesCache.size();
+        return 0;
     }
 
     private void maskAnimation(){
         ValueAnimator maskAnimator = ValueAnimator.ofFloat(0, 360);
         maskAnimator.setDuration(1000L);
         maskAnimator.setInterpolator(new AccelerateInterpolator());
-        maskAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                maskSweepAngle = (float) valueAnimator.getAnimatedValue();
-                if(maskSweepAngle == 360F){
-                    maskSweepAngle = 0;
-                }
-                invalidate();
+        maskAnimator.addUpdateListener(valueAnimator -> {
+            maskSweepAngle = (float) valueAnimator.getAnimatedValue();
+            if(maskSweepAngle == 360F){
+                maskSweepAngle = 0;
             }
+            invalidate();
         });
         maskAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -168,12 +180,9 @@ public class AutoChoiceView extends View {
         ValueAnimator choicesAnimator = ValueAnimator.ofFloat(0, 360);
         choicesAnimator.setDuration(1500L);
         choicesAnimator.setInterpolator(new DecelerateInterpolator());
-        choicesAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                choiceSweepAngle = (float) valueAnimator.getAnimatedValue();
-                invalidate();
-            }
+        choicesAnimator.addUpdateListener(valueAnimator -> {
+            choiceSweepAngle = (float) valueAnimator.getAnimatedValue();
+            invalidate();
         });
         choicesAnimator.start();
     }

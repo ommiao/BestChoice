@@ -2,7 +2,6 @@ package cn.ommiao.bestchoice;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 
 import java.util.ArrayList;
@@ -16,12 +15,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         final AutoChoiceView acv = findViewById(R.id.acv);
         Button btnRefresh = findViewById(R.id.btn_refresh);
-        btnRefresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                acv.refreshData(getData());
-            }
-        });
+        btnRefresh.setOnClickListener(view -> acv.refreshData(getData()));
     }
 
     private ArrayList<Choice> getData(){
@@ -31,6 +25,7 @@ public class MainActivity extends Activity {
         for (int i = 0; i < length; i++) {
             Choice choice = new Choice();
             choice.setColor(ColorUtil.getOneColor());
+            choice.setWeight(random.nextInt(10) + 1);
             choices.add(choice);
         }
         ColorUtil.reset();

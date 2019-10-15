@@ -7,6 +7,7 @@ public class Choice {
     private String desc;
     private String color;
     private float startAngle;
+    private int weight = 1;
 
     public String getDesc() {
         return desc;
@@ -30,5 +31,13 @@ public class Choice {
 
     public void setStartAngle(float startAngle) {
         this.startAngle = startAngle;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
     }
 }
