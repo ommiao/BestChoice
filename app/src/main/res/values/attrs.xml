@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AutoChoiceView">
+        <attr name="backgroundColor" format="color|reference"/>
+        <attr name="borderColor" format="color|reference"/>
+        <attr name="borderWidth" format="dimension"/>
+        <attr name="paddingWidth" format="dimension"/>
+        <attr name="startAngle" format="float"/>
+        <attr name="innerCircleScale" format="float"/>
+        <attr name="innerCircleColor" format="color|reference"/>
+        <attr name="innerCircleBorderScale" format="float"/>
+        <attr name="innerCircleBorderColor" format="color|reference"/>
+        <attr name="pointerLengthScale" format="float"/>
+        <attr name="pointerColor" format="color|reference"/>
+        <attr name="pointerBorderColor" format="color|reference"/>
+    </declare-styleable>
+</resources>

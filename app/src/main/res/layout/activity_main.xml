@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
     <LinearLayout
@@ -12,9 +13,15 @@
 
         <cn.ommiao.bestchoice.AutoChoiceView
             android:id="@+id/acv"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
-            android:layout_marginTop="20dp"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:backgroundColor="#ffffff"
+            app:startAngle="135"
+            app:borderWidth="10dp"
+            app:borderColor="#e0e0e0"
+            app:innerCircleScale="0.25"
+            app:innerCircleColor="#ffffff"
+            app:innerCircleBorderColor="#e0e0e0"/>
 
 
 

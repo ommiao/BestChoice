@@ -4,9 +4,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -25,15 +27,40 @@ public class AutoChoiceView extends View {
     private Paint mPaint = new Paint();
     private RectF rect = new RectF();
 
-    private int padding = 40;
-    private int radius;
-    private int bgOffset = 5;
+    //留白宽度
+    private int padding;
+    //边框线宽度
+    private int borderWidth;
+    //每份占的角度，360 / 总的权重
     private float perChoiceAngle = 1F;
-
+    //view中心位置
     private Point viewCenter = new Point();
-
+    //遮罩扫过的角度
     private float maskSweepAngle = 0;
+    //绘制选项时扫过的角度
     private float choiceSweepAngle = 0;
+    //背景色
+    private int backgroundColor;
+    //边框线色
+    private int borderColor;
+    //开始绘制选项和刷新时开始的角度
+    private float startAngle;
+    //内部圆盘比例，相对于大圆盘而言
+    private float innerCircleScale;
+    //内部圆盘颜色
+    private int innerCircleColor;
+    //内部圆盘边框颜色
+    private int innerCircleBorderColor;
+    //内部圆盘边框比例，相对于内部圆盘而言
+    private float innerCircleBorderScale;
+    //指针长度占比，相对于大圆盘
+    private float pointerLengthScale;
+    //指针颜色
+    private int pointerColor;
+    //指针边框颜色
+    private int pointerBorderColor;
+
+    private Path pointerPath = new Path();
 
     private ArrayList<Choice> choices = new ArrayList<>();
     private ArrayList<Choice> choicesCache = new ArrayList<>();
@@ -52,6 +79,26 @@ public class AutoChoiceView extends View {
 
     public AutoChoiceView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoChoiceView);
+        backgroundColor = typedArray.getColor(R.styleable.AutoChoiceView_backgroundColor, Color.WHITE);
+        borderColor = typedArray.getColor(R.styleable.AutoChoiceView_borderColor, Color.WHITE);
+        padding = typedArray.getDimensionPixelSize(R.styleable.AutoChoiceView_paddingWidth, 40);
+        borderWidth = typedArray.getDimensionPixelOffset(R.styleable.AutoChoiceView_borderWidth, 20);
+        startAngle = typedArray.getFloat(R.styleable.AutoChoiceView_startAngle, 270F);
+        innerCircleScale = typedArray.getFloat(R.styleable.AutoChoiceView_innerCircleScale, 0.25F);
+        if(innerCircleScale > 0.9F){
+            innerCircleScale = 0.9F;
+        }
+        innerCircleColor = typedArray.getColor(R.styleable.AutoChoiceView_innerCircleColor, Color.WHITE);
+        innerCircleBorderColor = typedArray.getColor(R.styleable.AutoChoiceView_innerCircleBorderColor, Color.WHITE);
+        innerCircleBorderScale = typedArray.getFloat(R.styleable.AutoChoiceView_innerCircleBorderScale, 0.2F);
+        pointerLengthScale = typedArray.getFloat(R.styleable.AutoChoiceView_pointerLengthScale, 0.5F);
+        pointerColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerColor, Color.GRAY);
+        pointerBorderColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerBorderColor, Color.WHITE);
+        typedArray.recycle();
+
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
     }
 
     public void refreshData( ArrayList<Choice> choices){
@@ -95,32 +142,38 @@ public class AutoChoiceView extends View {
         Log.d(TAG, "refreshColors: color has been refresh.");
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        rect.top = padding;
-        rect.left = padding;
-        rect.right = viewWidth - padding;
-        rect.bottom = viewHeight - padding;
+        mPaint.setStyle(Paint.Style.FILL);
 
         viewWidth = getWidth();
         viewHeight = getWidth();
 
-        radius = viewWidth / 2 - padding;
-
         viewCenter.x = viewWidth / 2;
         viewCenter.y = viewHeight / 2;
 
-        mPaint.setColor(Color.parseColor("#88888888"));
-        mPaint.setAntiAlias(true);
-        mPaint.setStyle(Paint.Style.FILL);
+        float radius = viewWidth / 2 - padding;
+        mPaint.setColor(borderColor);
+        canvas.drawCircle(viewCenter.x, viewCenter.y, radius, mPaint);
 
-        //shadow
-        canvas.drawCircle(viewCenter.x + bgOffset, viewCenter.y + bgOffset, radius, mPaint);
+        int allMargin = padding + borderWidth;
+        rect.top = allMargin;
+        rect.left = allMargin;
+        rect.right = viewWidth - allMargin;
+        rect.bottom = viewHeight - allMargin;
+
+        radius = viewWidth / 2 - allMargin;
 
         //background
-        mPaint.setColor(Color.WHITE);
+        mPaint.setColor(backgroundColor);
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius, mPaint);
 
         //choices
@@ -128,21 +181,60 @@ public class AutoChoiceView extends View {
             int drawCount = getDrawCount(choiceSweepAngle);
             float left = choiceSweepAngle - choicesCache.get(drawCount - 1).getStartAngle();
             mPaint.setColor(Color.parseColor(choicesCache.get(drawCount - 1).getColor()));
-            canvas.drawArc(rect, 270, left, true, mPaint);
+            canvas.drawArc(rect, startAngle, left, true, mPaint);
             for(int i = drawCount - 2; i >= 0; i--){
                 mPaint.setColor(Color.parseColor(choicesCache.get(i).getColor()));
                 float anglePrevious = 0F;
                 for(int j = drawCount - 2; j > i; j--){
                     anglePrevious += choicesCache.get(j).getWeight() * perChoiceAngle;
                 }
-                canvas.drawArc(rect, 270 + left + anglePrevious, perChoiceAngle * choicesCache.get(i).getWeight(), true, mPaint);
+                canvas.drawArc(rect, startAngle + left + anglePrevious, perChoiceAngle * choicesCache.get(i).getWeight(), true, mPaint);
             }
         }
 
         //mask
-        mPaint.setColor(Color.WHITE);
-        canvas.drawArc(rect, 270, maskSweepAngle, true, mPaint);
+        mPaint.setColor(backgroundColor);
+        canvas.drawArc(rect, startAngle, maskSweepAngle, true, mPaint);
 
+        //inner circle
+        mPaint.setColor(innerCircleBorderColor);
+        canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale * (1 + innerCircleBorderScale), mPaint);
+        mPaint.setColor(innerCircleColor);
+        canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale, mPaint);
+
+        //pointer
+        double pointerLength = radius * pointerLengthScale;
+        double pointerSideLength = pointerLength / (4 * Math.sqrt(3)) * 2;
+        float pointerSweepAngle = 180;
+        double pointerSweepAngleH = pointerSweepAngle / 360 * (Math.PI * 2);
+        double pointerLeftAngleH = (pointerSweepAngle - 30) / 360 * (Math.PI * 2);
+        double pointerRightAngleH = (pointerSweepAngle + 30) / 360 * (Math.PI * 2);
+
+        float pointerEndX, pointerEndY;
+        pointerEndX = (float) (viewCenter.x + Math.sin(pointerSweepAngleH) * pointerLength);
+        pointerEndY = (float) (viewCenter.y + Math.cos(pointerSweepAngleH) * pointerLength);
+
+        float pointerLeftX, pointerLeftY;
+        pointerLeftX = (float) (viewCenter.x + Math.sin(pointerLeftAngleH) * pointerSideLength);
+        pointerLeftY = (float) (viewCenter.y + Math.cos(pointerLeftAngleH) * pointerSideLength);
+
+        float pointerRightX, pointerRightY;
+        pointerRightX = (float) (viewCenter.x + Math.sin(pointerRightAngleH) * pointerSideLength);
+        pointerRightY = (float) (viewCenter.y + Math.cos(pointerRightAngleH) * pointerSideLength);
+
+        pointerPath.moveTo(viewCenter.x, viewCenter.y);
+        pointerPath.lineTo(pointerLeftX, pointerLeftY);
+        pointerPath.lineTo(pointerEndX, pointerEndY);
+        pointerPath.lineTo(pointerRightX, pointerRightY);
+        pointerPath.close();
+
+        mPaint.setColor(pointerColor);
+        canvas.drawPath(pointerPath, mPaint);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth((float) (radius * pointerLengthScale * 0.03));
+        mPaint.setStrokeJoin(Paint.Join.MITER);
+        mPaint.setColor(pointerBorderColor);
+        canvas.drawPath(pointerPath, mPaint);
     }
 
     private int getDrawCount(float sweepAngle){
