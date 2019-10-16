@@ -14,19 +14,25 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class AutoChoiceView extends View {
 
     private static final String TAG = "AutoChoiceView";
 
+    //是否是过渡状态
+    private boolean inProgress = false;
+    //view的宽度高度
     private int viewWidth, viewHeight;
+    //唯一的画笔
     private Paint mPaint = new Paint();
+    //扇形、圆形绘制区域
     private RectF rect = new RectF();
-
     //留白宽度
     private int padding;
     //边框线宽度
@@ -59,11 +65,21 @@ public class AutoChoiceView extends View {
     private int pointerColor;
     //指针边框颜色
     private int pointerBorderColor;
+    //中心点颜色
+    private int centerPointColor;
+    //中心点占比
+    private float centerPointScale;
+    //前置圈数
+    private int preCircleNumber;
 
+    //指针路径，用完记得reset
     private Path pointerPath = new Path();
 
     private ArrayList<Choice> choices = new ArrayList<>();
     private ArrayList<Choice> choicesCache = new ArrayList<>();
+    private ValueAnimator maskAnimator;
+    private ValueAnimator choicesAnimator;
+    private float pointerSweepAngle;
 
     public AutoChoiceView(Context context) {
         this(context, null);
@@ -79,6 +95,7 @@ public class AutoChoiceView extends View {
 
     public AutoChoiceView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AutoChoiceView);
         backgroundColor = typedArray.getColor(R.styleable.AutoChoiceView_backgroundColor, Color.WHITE);
         borderColor = typedArray.getColor(R.styleable.AutoChoiceView_borderColor, Color.WHITE);
@@ -86,22 +103,84 @@ public class AutoChoiceView extends View {
         borderWidth = typedArray.getDimensionPixelOffset(R.styleable.AutoChoiceView_borderWidth, 20);
         startAngle = typedArray.getFloat(R.styleable.AutoChoiceView_startAngle, 270F);
         innerCircleScale = typedArray.getFloat(R.styleable.AutoChoiceView_innerCircleScale, 0.25F);
-        if(innerCircleScale > 0.9F){
-            innerCircleScale = 0.9F;
-        }
         innerCircleColor = typedArray.getColor(R.styleable.AutoChoiceView_innerCircleColor, Color.WHITE);
         innerCircleBorderColor = typedArray.getColor(R.styleable.AutoChoiceView_innerCircleBorderColor, Color.WHITE);
         innerCircleBorderScale = typedArray.getFloat(R.styleable.AutoChoiceView_innerCircleBorderScale, 0.2F);
         pointerLengthScale = typedArray.getFloat(R.styleable.AutoChoiceView_pointerLengthScale, 0.5F);
         pointerColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerColor, Color.GRAY);
         pointerBorderColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerBorderColor, Color.WHITE);
+        centerPointColor = typedArray.getColor(R.styleable.AutoChoiceView_centerPointColor, Color.GRAY);
+        centerPointScale = typedArray.getFloat(R.styleable.AutoChoiceView_centerPointScale, 0.4F);
+        preCircleNumber = typedArray.getInteger(R.styleable.AutoChoiceView_preCircleNumber, 5);
         typedArray.recycle();
 
+        correctData();
+        initPaint();
+        initAnimators();
+    }
+
+    private void initPaint() {
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
     }
 
+    private void initAnimators(){
+
+        maskAnimator = ValueAnimator.ofFloat(0, 360);
+        maskAnimator = ValueAnimator.ofFloat(0, 360);
+        maskAnimator.setDuration(1000L);
+        maskAnimator.setInterpolator(new AccelerateInterpolator());
+        maskAnimator.addUpdateListener(valueAnimator -> {
+            maskSweepAngle = (float) valueAnimator.getAnimatedValue();
+            if(maskSweepAngle == 360F){
+                maskSweepAngle = 0;
+            }
+            invalidate();
+        });
+        maskAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                choicesAnimation();
+            }
+        });
+
+        choicesAnimator = ValueAnimator.ofFloat(0, 360);
+        choicesAnimator.setDuration(1200L);
+        choicesAnimator.setInterpolator(new DecelerateInterpolator());
+        choicesAnimator.addUpdateListener(valueAnimator -> {
+            choiceSweepAngle = (float) valueAnimator.getAnimatedValue();
+            invalidate();
+        });
+        choicesAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                inProgress = false;
+            }
+        });
+    }
+
+    private void correctData(){
+        if(innerCircleScale > 0.9F){
+            innerCircleScale = 0.9F;
+        }
+        if(innerCircleBorderScale > 0.9F){
+            innerCircleBorderScale = 0.9F;
+        }
+        if(pointerLengthScale > 0.9F){
+            pointerLengthScale = 0.9F;
+        }
+        if(centerPointScale > 0.9F){
+            centerPointScale = 0.9F;
+        }
+        if(preCircleNumber < 1){
+            preCircleNumber = 1;
+        }
+    }
+
     public void refreshData( ArrayList<Choice> choices){
+        if(inProgress){
+            return;
+        }
         Log.d(TAG, "refreshData: old size -> " + choicesCache.size());
         Log.d(TAG, "refreshData: new size -> " + choices.size());
         boolean needMask = this.choices.size() > 0;
@@ -205,22 +284,21 @@ public class AutoChoiceView extends View {
         //pointer
         double pointerLength = radius * pointerLengthScale;
         double pointerSideLength = pointerLength / (4 * Math.sqrt(3)) * 2;
-        float pointerSweepAngle = 180;
         double pointerSweepAngleH = pointerSweepAngle / 360 * (Math.PI * 2);
         double pointerLeftAngleH = (pointerSweepAngle - 30) / 360 * (Math.PI * 2);
         double pointerRightAngleH = (pointerSweepAngle + 30) / 360 * (Math.PI * 2);
 
         float pointerEndX, pointerEndY;
         pointerEndX = (float) (viewCenter.x + Math.sin(pointerSweepAngleH) * pointerLength);
-        pointerEndY = (float) (viewCenter.y + Math.cos(pointerSweepAngleH) * pointerLength);
+        pointerEndY = (float) (viewCenter.y - Math.cos(pointerSweepAngleH) * pointerLength);
 
         float pointerLeftX, pointerLeftY;
         pointerLeftX = (float) (viewCenter.x + Math.sin(pointerLeftAngleH) * pointerSideLength);
-        pointerLeftY = (float) (viewCenter.y + Math.cos(pointerLeftAngleH) * pointerSideLength);
+        pointerLeftY = (float) (viewCenter.y - Math.cos(pointerLeftAngleH) * pointerSideLength);
 
         float pointerRightX, pointerRightY;
         pointerRightX = (float) (viewCenter.x + Math.sin(pointerRightAngleH) * pointerSideLength);
-        pointerRightY = (float) (viewCenter.y + Math.cos(pointerRightAngleH) * pointerSideLength);
+        pointerRightY = (float) (viewCenter.y - Math.cos(pointerRightAngleH) * pointerSideLength);
 
         pointerPath.reset();
         pointerPath.moveTo(viewCenter.x, viewCenter.y);
@@ -236,6 +314,10 @@ public class AutoChoiceView extends View {
         mPaint.setStrokeJoin(Paint.Join.MITER);
         mPaint.setColor(pointerBorderColor);
         canvas.drawPath(pointerPath, mPaint);
+
+        mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setColor(centerPointColor);
+        canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale * centerPointScale, mPaint);
     }
 
     private int getDrawCount(float sweepAngle){
@@ -249,34 +331,62 @@ public class AutoChoiceView extends View {
     }
 
     private void maskAnimation(){
-        ValueAnimator maskAnimator = ValueAnimator.ofFloat(0, 360);
-        maskAnimator.setDuration(1000L);
-        maskAnimator.setInterpolator(new AccelerateInterpolator());
-        maskAnimator.addUpdateListener(valueAnimator -> {
-            maskSweepAngle = (float) valueAnimator.getAnimatedValue();
-            if(maskSweepAngle == 360F){
-                maskSweepAngle = 0;
-            }
-            invalidate();
-        });
-        maskAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                choicesAnimation();
-            }
-        });
+        inProgress = true;
         maskAnimator.start();
     }
 
     private void choicesAnimation(){
+        inProgress = true;
         refreshChoices();
-        ValueAnimator choicesAnimator = ValueAnimator.ofFloat(0, 360);
-        choicesAnimator.setDuration(1500L);
-        choicesAnimator.setInterpolator(new DecelerateInterpolator());
-        choicesAnimator.addUpdateListener(valueAnimator -> {
-            choiceSweepAngle = (float) valueAnimator.getAnimatedValue();
+        choicesAnimator.start();
+    }
+
+    public void select(){
+        if(choices.size() == 0){
+            return;
+        }
+        inProgress = true;
+        pointerRandomAnimation();
+    }
+
+    private void pointerRandomAnimation(){
+        float randomAngle = getRandomAngle();
+        float totalAngle = 360 * preCircleNumber + randomAngle;
+        ValueAnimator pointerRandomAnimator = ValueAnimator.ofFloat(pointerSweepAngle, pointerSweepAngle + totalAngle);
+        pointerRandomAnimator.setDuration((long) (600L * (totalAngle / 360F)));
+        pointerRandomAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        pointerRandomAnimator.addUpdateListener(valueAnimator -> {
+            pointerSweepAngle = (float) valueAnimator.getAnimatedValue();
+            if(pointerSweepAngle >= 360F){
+                pointerSweepAngle -= 360F;
+            }
             invalidate();
         });
-        choicesAnimator.start();
+        pointerRandomAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                inProgress = false;
+                if(onPointerStopListener != null){
+                    int index = getDrawCount(360F - (pointerSweepAngle % 360F)) - 1;
+                    onPointerStopListener.onPointerStop(choicesCache.get(index));
+                }
+            }
+        });
+        pointerRandomAnimator.start();
+    }
+
+    private float getRandomAngle(){
+        Random random = new Random();
+        return random.nextFloat() * 359.9999F;
+    }
+
+    private OnPointerStopListener onPointerStopListener;
+
+    public void setOnPointerStopListener(OnPointerStopListener onPointerStopListener) {
+        this.onPointerStopListener = onPointerStopListener;
+    }
+
+    public interface OnPointerStopListener {
+        void onPointerStop(Choice choice);
     }
 }
