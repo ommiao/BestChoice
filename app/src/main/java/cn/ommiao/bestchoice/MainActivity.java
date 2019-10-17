@@ -3,7 +3,6 @@ package cn.ommiao.bestchoice;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import java.util.ArrayList;
@@ -19,10 +18,10 @@ public class MainActivity extends Activity implements AutoChoiceView.OnPointerSt
         setContentView(R.layout.activity_main);
         final AutoChoiceView acv = findViewById(R.id.acv);
         acv.setOnPointerStopListener(this);
-        Button btnRefresh = findViewById(R.id.btn_refresh);
-        btnRefresh.setOnClickListener(view -> acv.refreshData(getData()));
-        Button btnSelect = findViewById(R.id.btn_select);
-        btnSelect.setOnClickListener(view -> acv.select());
+        ImageView ivRefresh = findViewById(R.id.iv_refresh);
+        ivRefresh.setOnClickListener(view -> acv.refreshData(getData()));
+        ImageView ivSelect = findViewById(R.id.iv_select);
+        ivSelect.setOnClickListener(view -> acv.select());
         ivSelected = findViewById(R.id.iv_selected);
     }
 

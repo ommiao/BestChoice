@@ -114,6 +114,9 @@ public class AutoChoiceView extends View {
         correctData();
         initPaint();
         initAnimators();
+
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        setWillNotDraw(false);
     }
 
     private void initPaint() {
@@ -238,6 +241,7 @@ public class AutoChoiceView extends View {
 
         float radius = viewWidth / 2 - padding;
         mPaint.setColor(borderColor);
+        mPaint.setShadowLayer(15, 5, 5, Color.GRAY);
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius, mPaint);
 
         int allMargin = padding + borderWidth;
@@ -249,6 +253,7 @@ public class AutoChoiceView extends View {
         radius = viewWidth / 2 - allMargin;
 
         //background
+        mPaint.setShadowLayer(0, 0, 0, 0);
         mPaint.setColor(backgroundColor);
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius, mPaint);
 
@@ -273,8 +278,10 @@ public class AutoChoiceView extends View {
         canvas.drawArc(rect, startAngle, maskSweepAngle, true, mPaint);
 
         //inner circle
+        mPaint.setShadowLayer(8, 3, 3, Color.GRAY);
         mPaint.setColor(innerCircleBorderColor);
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale * (1 + innerCircleBorderScale), mPaint);
+        mPaint.setShadowLayer(0, 0, 0, 0);
         mPaint.setColor(innerCircleColor);
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale, mPaint);
 
@@ -316,8 +323,10 @@ public class AutoChoiceView extends View {
             pointerPath.close();
         }
 
+        mPaint.setShadowLayer(4, 1, 1, Color.GRAY);
         mPaint.setColor(pointerColor);
         canvas.drawPath(pointerPath, mPaint);
+        mPaint.setShadowLayer(0, 0, 0, 0);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth((float) (radius * pointerLengthScale * 0.02));
         mPaint.setStrokeJoin(Paint.Join.MITER);
