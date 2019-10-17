@@ -218,10 +218,10 @@ public class AutoChoiceView extends View {
         Log.d(TAG, "refreshColors: color has been refresh.");
     }
 
-    @SuppressWarnings("SuspiciousNameCombination")
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+        int fullSize = MeasureSpec.getSize(widthMeasureSpec) <= MeasureSpec.getSize(heightMeasureSpec) ? widthMeasureSpec : heightMeasureSpec;
+        super.onMeasure(fullSize, fullSize);
     }
 
     @Override
