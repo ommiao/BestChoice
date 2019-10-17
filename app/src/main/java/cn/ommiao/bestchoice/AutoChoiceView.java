@@ -65,8 +65,6 @@ public class AutoChoiceView extends View {
     private int pointerColor;
     //指针边框颜色
     private int pointerBorderColor;
-    //中心点颜色
-    private int centerPointColor;
     //中心点占比
     private float centerPointScale;
     //前置圈数
@@ -109,8 +107,7 @@ public class AutoChoiceView extends View {
         pointerLengthScale = typedArray.getFloat(R.styleable.AutoChoiceView_pointerLengthScale, 0.5F);
         pointerColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerColor, Color.GRAY);
         pointerBorderColor = typedArray.getColor(R.styleable.AutoChoiceView_pointerBorderColor, Color.WHITE);
-        centerPointColor = typedArray.getColor(R.styleable.AutoChoiceView_centerPointColor, Color.GRAY);
-        centerPointScale = typedArray.getFloat(R.styleable.AutoChoiceView_centerPointScale, 0.4F);
+        centerPointScale = typedArray.getFloat(R.styleable.AutoChoiceView_centerPointScale, 0.1F);
         preCircleNumber = typedArray.getInteger(R.styleable.AutoChoiceView_preCircleNumber, 5);
         typedArray.recycle();
 
@@ -282,30 +279,42 @@ public class AutoChoiceView extends View {
         canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale, mPaint);
 
         //pointer
+        pointerPath.reset();
         double pointerLength = radius * pointerLengthScale;
         double pointerSideLength = pointerLength / (4 * Math.sqrt(3)) * 2;
+
         double pointerSweepAngleH = pointerSweepAngle / 360 * (Math.PI * 2);
-        double pointerLeftAngleH = (pointerSweepAngle - 30) / 360 * (Math.PI * 2);
-        double pointerRightAngleH = (pointerSweepAngle + 30) / 360 * (Math.PI * 2);
 
         float pointerEndX, pointerEndY;
         pointerEndX = (float) (viewCenter.x + Math.sin(pointerSweepAngleH) * pointerLength);
         pointerEndY = (float) (viewCenter.y - Math.cos(pointerSweepAngleH) * pointerLength);
 
-        float pointerLeftX, pointerLeftY;
-        pointerLeftX = (float) (viewCenter.x + Math.sin(pointerLeftAngleH) * pointerSideLength);
-        pointerLeftY = (float) (viewCenter.y - Math.cos(pointerLeftAngleH) * pointerSideLength);
+        float centerPointRadius = (float) (pointerLength * centerPointScale);
+        rect.left = viewCenter.x - centerPointRadius;
+        rect.top = viewCenter.y - centerPointRadius;
+        rect.right = viewCenter.x + centerPointRadius;
+        rect.bottom = viewCenter.y + centerPointRadius;
+        pointerPath.addArc(rect, pointerSweepAngle - 60, 300);
+        if(centerPointRadius >= pointerSideLength){
+            pointerPath.lineTo(pointerEndX, pointerEndY);
+            pointerPath.close();
+        } else {
+            double pointerLeftAngleH = (pointerSweepAngle - 30) / 360 * (Math.PI * 2);
+            float pointerLeftX, pointerLeftY;
+            pointerLeftX = (float) (viewCenter.x + Math.sin(pointerLeftAngleH) * pointerSideLength);
+            pointerLeftY = (float) (viewCenter.y - Math.cos(pointerLeftAngleH) * pointerSideLength);
+            pointerPath.lineTo(pointerLeftX, pointerLeftY);
 
-        float pointerRightX, pointerRightY;
-        pointerRightX = (float) (viewCenter.x + Math.sin(pointerRightAngleH) * pointerSideLength);
-        pointerRightY = (float) (viewCenter.y - Math.cos(pointerRightAngleH) * pointerSideLength);
+            pointerPath.lineTo(pointerEndX, pointerEndY);
 
-        pointerPath.reset();
-        pointerPath.moveTo(viewCenter.x, viewCenter.y);
-        pointerPath.lineTo(pointerLeftX, pointerLeftY);
-        pointerPath.lineTo(pointerEndX, pointerEndY);
-        pointerPath.lineTo(pointerRightX, pointerRightY);
-        pointerPath.close();
+            double pointerRightAngleH = (pointerSweepAngle + 30) / 360 * (Math.PI * 2);
+            float pointerRightX, pointerRightY;
+            pointerRightX = (float) (viewCenter.x + Math.sin(pointerRightAngleH) * pointerSideLength);
+            pointerRightY = (float) (viewCenter.y - Math.cos(pointerRightAngleH) * pointerSideLength);
+            pointerPath.lineTo(pointerRightX, pointerRightY);
+
+            pointerPath.close();
+        }
 
         mPaint.setColor(pointerColor);
         canvas.drawPath(pointerPath, mPaint);
@@ -315,9 +324,6 @@ public class AutoChoiceView extends View {
         mPaint.setColor(pointerBorderColor);
         canvas.drawPath(pointerPath, mPaint);
 
-        mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setColor(centerPointColor);
-        canvas.drawCircle(viewCenter.x, viewCenter.y, radius * innerCircleScale * centerPointScale, mPaint);
     }
 
     private int getDrawCount(float sweepAngle){
@@ -342,7 +348,7 @@ public class AutoChoiceView extends View {
     }
 
     public void select(){
-        if(choices.size() == 0){
+        if(choices.size() == 0 || inProgress){
             return;
         }
         inProgress = true;

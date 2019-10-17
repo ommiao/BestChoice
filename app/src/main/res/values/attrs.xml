@@ -13,7 +13,6 @@
         <attr name="pointerLengthScale" format="float"/>
         <attr name="pointerColor" format="color|reference"/>
         <attr name="pointerBorderColor" format="color|reference"/>
-        <attr name="centerPointColor" format="color|reference"/>
         <attr name="centerPointScale" format="float"/>
         <attr name="preCircleNumber" format="integer"/>
     </declare-styleable>

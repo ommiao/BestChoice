@@ -21,7 +21,9 @@
             app:innerCircleScale="0.15"
             app:innerCircleColor="#f1f1f1"
             app:innerCircleBorderColor="#e0e0e0"
-            app:pointerColor="#e0e0e0" />
+            app:pointerColor="#e0e0e0"
+            app:pointerLengthScale="0.6"
+            app:centerPointScale="0.1"/>
 
 
 
