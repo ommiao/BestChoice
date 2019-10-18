@@ -5,16 +5,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:gravity="center_horizontal">
 
         <cn.ommiao.bestchoice.AutoChoiceView
             android:id="@+id/acv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:paddingWidth="20dp"
             app:backgroundColor="#f1f1f1"
             app:borderWidth="10dp"
             app:borderColor="#e0e0e0"
@@ -25,12 +25,38 @@
             app:pointerLengthScale="0.6"
             app:centerPointScale="0.1"/>
 
-        <androidx.recyclerview.widget.RecyclerView
+        <ListView
+            android:id="@+id/lv_choice"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:elevation="5dp"/>
+            android:scrollbars="none"
+            android:layout_below="@id/acv"
+            android:background="@drawable/shape_bg_list"
+            android:dividerHeight="0dp"
+            android:divider="@null"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"/>
 
-    </LinearLayout>
+        <FrameLayout
+            android:id="@+id/fl_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/acv"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:background="@drawable/shape_bg_list">
+
+            <ImageView
+                android:id="@+id/iv_add"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_add"
+                android:tint="#e0e0e0"
+                android:layout_gravity="center"/>
+
+        </FrameLayout>
+
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -40,16 +66,9 @@
         android:orientation="vertical">
 
         <ImageView
-            android:id="@+id/iv_selected"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginBottom="5dp"
-            android:src="@mipmap/ic_launcher_round"/>
-
-        <ImageView
             android:id="@+id/iv_refresh"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:src="@drawable/ic_refresh"
@@ -60,12 +79,12 @@
 
         <ImageView
             android:id="@+id/iv_select"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:padding="3dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="10dp"
             android:layout_marginTop="8dp"
             android:src="@drawable/ic_select"
             android:tint="@color/colorPrimary"

@@ -1,6 +1,8 @@
 package cn.ommiao.bestchoice;
 
-public class Choice {
+import java.io.Serializable;
+
+public class Choice implements Serializable {
 
     public static float PER_ANGLE;
 
