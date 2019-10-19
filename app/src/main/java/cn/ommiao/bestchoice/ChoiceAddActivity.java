@@ -13,11 +13,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.UUID;
+
 public class ChoiceAddActivity extends Activity {
 
     private Choice choice;
 
-    private ImageView ivColor;
     private EditText etDesc, etWeight;
 
     @Override
@@ -35,7 +36,7 @@ public class ChoiceAddActivity extends Activity {
             setResult(RESULT_CANCELED);
             finish();
         });
-        ivColor = findViewById(R.id.iv_color);
+        ImageView ivColor = findViewById(R.id.iv_color);
         etDesc = findViewById(R.id.et_desc);
         etWeight = findViewById(R.id.et_weight);
         if(choice != null){
@@ -43,6 +44,7 @@ public class ChoiceAddActivity extends Activity {
             etWeight.setText(String.valueOf(choice.getWeight()));
         } else {
             choice = new Choice();
+            choice.setId(UUID.randomUUID().toString());
             choice.setColor(ColorUtil.getOneColor());
         }
         ivColor.setColorFilter(Color.parseColor(choice.getColor()));
@@ -67,6 +69,8 @@ public class ChoiceAddActivity extends Activity {
             Toast.makeText(this, "请输入有效的权重，取值范围为1-1000", Toast.LENGTH_SHORT).show();
             return false;
         }
+        choice.setDesc(desc);
+        choice.setWeight(Integer.parseInt(weight));
         return true;
     }
 

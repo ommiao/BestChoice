@@ -1,16 +1,19 @@
 package cn.ommiao.bestchoice;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Random;
 
-public class MainActivity extends Activity implements AutoChoiceView.OnPointerStopListener, View.OnClickListener {
+public class MainActivity extends Activity implements AutoChoiceView.OnPointerStopListener, View.OnClickListener, ChoiceAdapter.OnChoiceClickListener {
 
     private ArrayList<Choice> choices = new ArrayList<>();
     private ChoiceAdapter adapter;
@@ -22,7 +25,13 @@ public class MainActivity extends Activity implements AutoChoiceView.OnPointerSt
         final AutoChoiceView acv = findViewById(R.id.acv);
         acv.setOnPointerStopListener(this);
         ImageView ivRefresh = findViewById(R.id.iv_refresh);
-        ivRefresh.setOnClickListener(view -> acv.refreshData(getData()));
+        ivRefresh.setOnClickListener(view -> {
+            if(choices.size() >= 2){
+                acv.refreshData(choices);
+            } else {
+                Toast.makeText(this, "至少添加两个选项", Toast.LENGTH_SHORT).show();
+            }
+        });
         ImageView ivSelect = findViewById(R.id.iv_select);
         ivSelect.setOnClickListener(view -> acv.select());
         ListView lvChoice = findViewById(R.id.lv_choice);
@@ -30,30 +39,20 @@ public class MainActivity extends Activity implements AutoChoiceView.OnPointerSt
         ImageView ivAdd = emptyView.findViewById(R.id.iv_add);
         ivAdd.setOnClickListener(this);
         lvChoice.setEmptyView(emptyView);
-        adapter = new ChoiceAdapter(this, R.layout.item_choice, choices);
+        @SuppressLint("InflateParams")
+        View footer = LayoutInflater.from(this).inflate(R.layout.layout_list_footer, null);
+        footer.findViewById(R.id.iv_add).setOnClickListener(this);
+        lvChoice.addFooterView(footer);
+        adapter = new ChoiceAdapter(this, choices);
+        adapter.setOnChoiceClickListener(this);
         lvChoice.setAdapter(adapter);
-    }
-
-    private ArrayList<Choice> getData(){
-        choices.clear();
-        Random random = new Random();
-        int length = random.nextInt(15) + 3;
-        for (int i = 0; i < length; i++) {
-            Choice choice = new Choice();
-            choice.setColor(ColorUtil.getOneColor());
-            choice.setWeight(random.nextInt(10) + 1);
-            choice.setDesc((i + 1) + ". color -> " + choice.getColor());
-            choices.add(choice);
-        }
-        ColorUtil.reset();
-        adapter.notifyDataSetChanged();
-        adapter.notifyDataSetInvalidated();
-        return choices;
     }
 
     @Override
     public void onPointerStop(Choice choice) {
-
+        Intent intent = new Intent(this, ChoiceSelectedActivity.class);
+        intent.putExtra("choice", choice);
+        startActivity(intent);
     }
 
     @Override
@@ -63,5 +62,45 @@ public class MainActivity extends Activity implements AutoChoiceView.OnPointerSt
                 startActivityForResult(new Intent(this, ChoiceAddActivity.class), 666);
                 break;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode == RESULT_OK){
+            Choice choice = (Choice) data.getSerializableExtra("choice");
+            if(choice != null){
+                Choice old = isChoiceExist(choice.getId());
+                if(old != null){
+                    old.setDesc(choice.getDesc());
+                    old.setWeight(choice.getWeight());
+                } else {
+                    choices.add(choice);
+                }
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private Choice isChoiceExist(String id){
+        for (Choice choice : choices) {
+            if(choice.getId().equals(id)){
+                return choice;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void onChoiceContentClick(Choice choice) {
+        Intent intent = new Intent(this, ChoiceAddActivity.class);
+        intent.putExtra("choice", choice);
+        startActivityForResult(intent, 666);
+    }
+
+    @Override
+    public void onChoiceDeleteClick(int i) {
+        ColorUtil.restore(choices.get(i).getColor());
+        choices.remove(i);
+        adapter.notifyDataSetChanged();
     }
 }

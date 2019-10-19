@@ -44,6 +44,7 @@
             android:layout_marginEnd="15dp"
             android:textSize="16sp"
             android:hint="请输入选项描述"
+            android:maxLength="30"
             android:gravity="top"
             android:maxLines="3"
             android:minLines="3"/>

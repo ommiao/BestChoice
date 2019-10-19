@@ -6,10 +6,19 @@ public class Choice implements Serializable {
 
     public static float PER_ANGLE;
 
+    private String id;
     private String desc;
     private String color;
     private float startAngle;
     private int weight = 1;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getDesc() {
         return desc;

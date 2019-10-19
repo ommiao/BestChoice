@@ -48,4 +48,14 @@ public class ColorUtil {
         colorsSelected.clear();
     }
 
+    public static void restore(String color){
+        colors.add(color);
+        for (String s : colorsSelected) {
+            if(s.equals(color)){
+                colorsSelected.remove(color);
+                break;
+            }
+        }
+    }
+
 }

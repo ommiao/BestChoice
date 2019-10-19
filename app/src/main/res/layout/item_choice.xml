@@ -1,45 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:gravity="center_vertical"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
+    android:paddingTop="15dp"
+    android:paddingBottom="15dp"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
-    android:orientation="horizontal">
+    android:descendantFocusability="blocksDescendants"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ImageView
-        android:id="@+id/iv_color"
-        android:layout_width="15dp"
-        android:layout_height="15dp"
-        android:src="@drawable/shape_circle"
-        android:tint="@color/colorPrimary"/>
-
-    <TextView
-        android:id="@+id/tv_weight"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:textSize="14sp"
-        android:gravity="center"
-        tools:text="12"
-        android:fontFamily="@font/agency_m"
-        android:includeFontPadding="false"
-        android:textColor="@color/colorPrimary"
-        android:maxLength="3" />
-
-    <TextView
-        android:id="@+id/tv_desc"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        tools:text="ddddd"
-        android:layout_marginStart="10dp"
-        android:textSize="18sp"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:includeFontPadding="false"/>
+        android:gravity="center_vertical"
+        android:layout_gravity="center"
+        android:orientation="horizontal">
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/iv_color"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/shape_circle"
+            android:tint="@color/colorPrimary"/>
+
+        <TextView
+            android:id="@+id/tv_weight"
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textSize="18sp"
+            android:gravity="center"
+            tools:text="12"
+            android:fontFamily="@font/agency_m"
+            android:includeFontPadding="false"
+            android:textColor="@color/colorPrimary"
+            android:maxLength="3" />
+
+        <TextView
+            android:id="@+id/tv_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary"
+            tools:text="ddddd"
+            android:layout_marginStart="10dp"
+            android:textSize="20sp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:includeFontPadding="false"/>
+
+        <ImageView
+            android:id="@+id/iv_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_delete"/>
+
+    </LinearLayout>
+
+</FrameLayout>

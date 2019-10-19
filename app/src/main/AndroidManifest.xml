@@ -18,6 +18,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".ChoiceAddActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/FakeDialog"/>
+        <activity android:name=".ChoiceSelectedActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/FakeDialog"/>
     </application>
 

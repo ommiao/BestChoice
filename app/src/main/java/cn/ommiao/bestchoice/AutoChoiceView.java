@@ -183,7 +183,6 @@ public class AutoChoiceView extends View {
         boolean needMask = this.choices.size() > 0;
         this.choices.clear();
         this.choices.addAll(choices);
-        calculateAngles();
         if(needMask){
             maskAnimation();
         } else {
@@ -192,29 +191,30 @@ public class AutoChoiceView extends View {
     }
 
     private void calculateAngles() {
-        int size = choices.size();
+        int size = choicesCache.size();
         Choice.PER_ANGLE = 360F / getAllWeight();
         float startAngle = 0F;
         for (int i = 0; i < size; i++) {
             if(i > 0){
-                startAngle += choices.get(i - 1).getWeight() * Choice.PER_ANGLE;
+                startAngle += choicesCache.get(i - 1).getWeight() * Choice.PER_ANGLE;
             }
-            choices.get(i).setStartAngle(startAngle);
+            choicesCache.get(i).setStartAngle(startAngle);
         }
     }
 
     private float getAllWeight(){
         int weight = 0;
-        for (Choice choice : choices) {
+        for (Choice choice : choicesCache) {
             weight += choice.getWeight();
         }
         return weight;
     }
 
     private void refreshChoices(){
-        perChoiceAngle = Choice.PER_ANGLE;
         choicesCache.clear();
         choicesCache.addAll(choices);
+        calculateAngles();
+        perChoiceAngle = Choice.PER_ANGLE;
         Log.d(TAG, "refreshColors: color has been refresh.");
     }
 
